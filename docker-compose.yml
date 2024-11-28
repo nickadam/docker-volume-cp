@@ -1,0 +1,52 @@
+services:
+  example-service:
+    image: alpine
+    command: sh -c 'while true; do date >> /data/data.log; sleep 1; done'
+    volumes:
+      - type: volume
+        source: data
+        target: /data
+
+  example-service2:
+    image: alpine
+    command: sh -c 'while true; do date >> "/root/my data/data.log"; sleep 1; done'
+    volumes:
+      - type: volume
+        source: data2
+        target: "/root/my data"
+
+  sync-sender:
+    image: nickadam/docker-volume-cp:v1.0.0
+    # Cross cluster example sending to port 3000
+    # command: sync 10.10.10.10 3000 /data/ "/root/my data/"
+    command: sync sync-receiver 22 /data/ "/root/my data/"  # the trailing slash is required
+    volumes:
+      - type: volume
+        source: data
+        target: /data
+      - type: volume
+        source: data2
+        target: "/root/my data"
+
+  sync-receiver:
+    image: nickadam/docker-volume-cp:v1.0.0
+    build: .
+    volumes:
+      - type: volume
+        source: data3
+        target: /data
+      - type: volume
+        source: data4
+        target: "/root/my data"
+    # Cross cluster example open on port 3000
+    ports:
+      - target: 22
+        published: 3000
+        protocol: tcp
+        mode: host
+
+volumes:
+  data:
+  data2:
+  data3:
+  data4:
